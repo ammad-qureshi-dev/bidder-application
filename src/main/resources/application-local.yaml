@@ -83,10 +83,7 @@ token-expiry:
 # ---------- bids + catalog ----------
 client-url: http://localhost:3000
 
-# ---------- bids ----------
-flag:
-  runRecomputeHighestBidsAfterBidExpires: true
-
-# ---------- catalog ----------
+# ---------- feature flags ----------
 feature-flag:
   run-close-auction-schedule-job: false
+  runRecomputeHighestBidsAfterBidExpires: true

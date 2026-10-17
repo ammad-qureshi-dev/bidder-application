@@ -7,7 +7,7 @@ import com.bidder.application.models.entities.BaseEntity;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.bidder.application.utils.catalog.Constants;
+import com.bidder.application.utils.Constants;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -20,7 +20,7 @@ import org.hibernate.validator.constraints.Length;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(schema = Constants.Database.SCHEMA, name = "item")
+@Table(schema = Constants.Database.CATALOG_SCHEMA, name = "item")
 @EqualsAndHashCode(callSuper = true)
 @ToString(exclude = {"auction"})
 public class Item extends BaseEntity {

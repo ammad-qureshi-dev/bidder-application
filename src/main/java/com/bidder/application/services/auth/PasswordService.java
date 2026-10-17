@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import static com.bidder.application.utils.auth.Constants.Auth.*;
 
 @Slf4j
 @Service
@@ -148,7 +147,6 @@ public class PasswordService {
 		}
 
 		var resetUrl = clientUrl + "/password/reset?token=" + token.get();
-		var notificationMessage = String.format(PASSWORD_RESET_MESSAGE, resetUrl);
 
 		// ToDo: kafka event for password_reset
 	}

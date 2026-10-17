@@ -35,7 +35,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.bidder.application.utils.catalog.Constants.AUCTION_URL;
+import static com.bidder.application.utils.Constants.AUCTION_URL;
 
 @Slf4j
 @Service

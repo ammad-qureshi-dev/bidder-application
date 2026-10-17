@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import com.bidder.application.utils.catalog.Constants;
+import com.bidder.application.utils.Constants;
 import com.bidder.application.models.enums.catalog.AuctionCategory;
 import com.bidder.application.models.enums.catalog.AuctionStatus;
 import jakarta.persistence.*;
@@ -24,7 +24,7 @@ import org.hibernate.type.SqlTypes;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(schema = Constants.Database.SCHEMA, name = "auction")
+@Table(schema = Constants.Database.CATALOG_SCHEMA, name = "auction")
 @EqualsAndHashCode(callSuper = true)
 @ToString(exclude = {"items"})
 public class Auction extends BaseEntity {

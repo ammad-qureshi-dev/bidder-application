@@ -30,8 +30,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.bidder.application.utils.auth.Constants.ExceptionMessages.INVALID_CREDENTIALS;
-import static com.bidder.application.utils.auth.Constants.ExceptionMessages.INVALID_PASSWORD_FORMAT;
+import static com.bidder.application.utils.Constants.ExceptionMessages.INVALID_CREDENTIALS;
+import static com.bidder.application.utils.Constants.ExceptionMessages.INVALID_PASSWORD_FORMAT;
 
 @Slf4j
 @Service

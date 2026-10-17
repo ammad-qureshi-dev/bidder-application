@@ -21,7 +21,7 @@ public class BidScheduler {
 	private final BidService bidService;
 	private final BidRepository bidRepository;
 
-	@Value("${flag.runRecomputeHighestBidsAfterBidExpires}")
+	@Value("${feature-flag.runRecomputeHighestBidsAfterBidExpires}")
 	private boolean runRecomputeHighestBidsAfterBidExpires;
 
 	@Transactional

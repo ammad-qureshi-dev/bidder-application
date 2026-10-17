@@ -16,7 +16,7 @@ import com.bidder.application.models.entities.auth.AppUser;
 import models.ContactType;
 import org.springframework.stereotype.Service;
 
-import static com.bidder.application.utils.auth.Constants.Messages.NOT_APPLICABLE;
+import static com.bidder.application.utils.Constants.Messages.NOT_APPLICABLE;
 
 @Slf4j
 @Service
