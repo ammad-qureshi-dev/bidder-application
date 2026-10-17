@@ -1,0 +1,21 @@
+# Layered on top of the local profile. Datasource comes from Testcontainers (@ServiceConnection).
+spring:
+  jpa:
+    properties:
+      hibernate:
+        # schemas (identity_and_auth_service, bidding_service, catalog_service, ...) don't exist in a fresh database
+        hbm2ddl:
+          create_namespaces: true
+
+# test-only signing key so the build doesn't depend on the gitignored application-local.properties
+jwt:
+  secret: dGVzdC1vbmx5LWp3dC1zZWNyZXQta2V5LWZvci10aGUtbW9ub2xpdGgtYnVpbGQtMDEyMzQ1Njc4OQ==
+
+flag:
+  runRecomputeHighestBidsAfterBidExpires: false
+
+# same actuator path as the prod profile (the one Render/Docker health checks use)
+management:
+  endpoints:
+    web:
+      base-path: /api/v1/actuator

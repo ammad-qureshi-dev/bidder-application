@@ -1,0 +1,21 @@
+package com.bidder.application.controllers.dtos.request.catalog;
+
+import java.time.Instant;
+import java.util.List;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import com.bidder.application.models.enums.catalog.AuctionCategory;
+
+public record AuctionRequest(@NotNull String title,
+
+		@NotNull Instant startTime,
+
+		@NotNull Instant endTime,
+
+		List<BiddingItemRequest> biddingItems,
+
+		List<AuctionCategory> categories,
+
+		@NotNull @Valid PickupLocationRequest pickupLocation) {
+}

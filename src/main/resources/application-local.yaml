@@ -1,0 +1,92 @@
+spring:
+  application:
+    name: application
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/postgres?prepareThreshold=0
+    username: ${DB_USER}
+    password: ${DB_PWD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      # This clears any cached prepared statements before reusing the connection.
+      connection-init-sql: "DISCARD ALL"
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    properties:
+      jdbc:
+        time_zone: UTC
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  output:
+    ansi:
+      enabled: ALWAYS
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: auth-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: info
+    com.bidder.application: info
+
+# ---------- security + notification proxy ----------
+routes:
+  # notification-service is not part of the monolith
+  notification: http://localhost:8081
+
+whitelist-endpoints:
+  - /identity-and-auth/api/v1/auth/login
+  - /identity-and-auth/api/v1/auth/register
+  - /bidding/api/v1/bid/search
+  - /bidding/api/v1/bid/search/item/**
+  - /bidding/api/v1/bid/item/*/top-ten-bids
+#  - /notification/api/v1/notification/recipient
+#  - /notification/api/v1/notification/**
+  - /catalog/api/v1/auction/search
+  - /catalog/api/v1/item/**
+  - /catalog/api/v1/auction/*/items
+  - /catalog/api/v1/auction/view/*
+
+# ---------- security + auth ----------
+jwt:
+  secret: ${JWT_SECRET}
+
+cookies:
+  secure: false
+  sameSite: Lax
+  httpOnly: false
+
+client:
+  url: http://localhost:3000
+
+# ---------- auth ----------
+auth:
+  registration-pwd:
+    allow-simple: true
+
+token-expiry:
+  password-reset: 300 # 5mins
+  account-verification: 900 # 15mins
+
+# ---------- bids + catalog ----------
+client-url: http://localhost:3000
+
+# ---------- bids ----------
+flag:
+  runRecomputeHighestBidsAfterBidExpires: true
+
+# ---------- catalog ----------
+feature-flag:
+  run-close-auction-schedule-job: false

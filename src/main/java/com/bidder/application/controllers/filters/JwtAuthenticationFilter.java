@@ -1,0 +1,94 @@
+/* (C) 2026
+bidder.app */
+package com.bidder.application.controllers.filters;
+
+import com.bidder.application.services.auth.JwtService;
+import io.jsonwebtoken.JwtException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import com.bidder.application.models.entities.auth.AppUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.*;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+	private final JwtService jwtService;
+
+	private final List<String> whitelistEndpoints;
+
+	private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+
+	public static final String TOKEN_COOKIE = "token";
+
+	@Override
+	protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+			@NonNull FilterChain filterChain) throws ServletException, IOException {
+		String jwt = null;
+		if (request.getCookies() != null) {
+			jwt = Arrays.stream(request.getCookies()).filter(cookie -> TOKEN_COOKIE.equals(cookie.getName()))
+					.map(Cookie::getValue).findFirst().orElse(null);
+		}
+
+		if (jwt == null) {
+			filterChain.doFilter(request, response);
+			return;
+		}
+
+		String username;
+		UUID userId;
+		try {
+			username = jwtService.extractUsername(jwt);
+			userId = jwtService.extractAppUserId(jwt);
+		} catch (JwtException e) {
+			log.debug("Rejecting request with invalid/expired JWT: {}", e.getMessage());
+			filterChain.doFilter(request, response);
+			return;
+		}
+
+		if (!Objects.isNull(username) && Objects.isNull(SecurityContextHolder.getContext().getAuthentication())) {
+			if (jwtService.isTokenValid(jwt)) {
+
+				// controllers read the caller via @AuthenticationPrincipal(expression = "id")
+				AppUser principal = new AppUser(userId, username, null, null);
+
+				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(principal,
+						null, principal.getAuthorities());
+
+				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+				SecurityContextHolder.getContext().setAuthentication(authentication);
+			}
+
+		}
+
+		filterChain.doFilter(request, response);
+	}
+
+	@Override
+	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+		String path = request.getServletPath();
+
+		if (whitelistEndpoints.stream().anyMatch(pattern -> PATH_MATCHER.match(pattern, path))) {
+			return true;
+		}
+
+		return path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")
+				|| path.startsWith("/swagger-resources") || path.equals("/swagger-ui.html");
+	}
+}

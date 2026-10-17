@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1
+
+FROM eclipse-temurin:21-jdk-alpine AS build
+WORKDIR /workspace
+
+COPY gradlew settings.gradle build.gradle ./
+COPY gradle gradle
+COPY src src
+
+# GitHub Packages credentials (for notifications-model) are passed as build secrets so they never land in an image layer
+RUN --mount=type=cache,target=/root/.gradle \
+    --mount=type=secret,id=BIDDER_USERNAME,env=BIDDER_USERNAME,required=true \
+    --mount=type=secret,id=BIDDER_GITHUB_TOKEN,env=BIDDER_GITHUB_TOKEN,required=true \
+    chmod +x gradlew \
+ && ./gradlew bootJar --no-daemon -x test \
+ && cp "$(ls build/libs/*.jar | grep -v plain)" app.jar
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+RUN addgroup -S app && adduser -S app -G app
+COPY --from=build --chown=app:app /workspace/app.jar app.jar
+USER app
+
+ENV SPRING_PROFILES_ACTIVE=prod \
+    JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError"
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=90s --retries=3 \
+    CMD wget -qO- http://localhost:${PORT:-8080}/api/v1/actuator/health/liveness || exit 1
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,0 +1,13 @@
+package com.bidder.application.controllers.dtos.response.catalog;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+import com.bidder.application.controllers.dtos.response.catalog.PickupLocationResponse;
+import com.bidder.application.models.enums.catalog.AuctionCategory;
+import com.bidder.application.models.enums.catalog.AuctionStatus;
+
+public record AuctionSummaryResponse(UUID id, String title, AuctionStatus status, List<AuctionCategory> categories,
+									 int itemCount, Instant startTime, Instant endTime, PickupLocationResponse pickupLocation) {
+}

@@ -1,0 +1,131 @@
+/* (C) 2026 
+bidder.app */
+package com.bidder.application.services.catalog;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.UUID;
+
+import com.bidder.application.mappers.catalog.ItemMapper;
+import com.bidder.application.models.entities.catalog.Auction;
+import com.bidder.application.models.entities.catalog.Item;
+import com.bidder.application.repositories.catalog.AuctionRepository;
+import com.bidder.application.repositories.catalog.ItemRepository;
+import com.bidder.application.controllers.dtos.request.catalog.AcceptingBidsRequest;
+import com.bidder.application.controllers.dtos.request.catalog.UpdatedBidRequest;
+import com.bidder.application.controllers.dtos.response.catalog.ItemResponse;
+import com.bidder.application.models.enums.catalog.AuctionStatus;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class ItemService {
+
+	private final ItemRepository itemRepository;
+	private final AuctionRepository auctionRepository;
+
+	public ItemResponse getItem(UUID id) {
+		var item = getItemById(id);
+		return ItemMapper.entityToResponse(item);
+	}
+
+	public Optional<ItemResponse> findItem(UUID id) {
+		return itemRepository.findById(id).map(ItemMapper::entityToResponse);
+	}
+
+	public Item getItemById(UUID id) {
+		return itemRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Item not found"));
+	}
+
+	public boolean acceptingBids(UUID itemId, AcceptingBidsRequest request) {
+		var itemResult = itemRepository.findById(itemId);
+
+		if (itemResult.isEmpty()) {
+			throw new IllegalStateException("Item does not exist");
+		}
+
+		var item = itemResult.get();
+
+		item.setAcceptingBids(request.acceptingBids());
+		itemRepository.save(item);
+
+		return item.isAcceptingBids();
+	}
+
+	public UUID updateHighestBidForItem(UUID itemId, UpdatedBidRequest request) {
+		var item = getItemById(itemId);
+
+		if (!item.isAcceptingBids()) {
+			return null;
+		}
+
+		var oldBidId = item.getHighestBidId();
+
+		// bidId is null when there is absolutely no highest bid remaining
+		if (request.bidId() == null) {
+			setHighestBidData(item, null, BigDecimal.ZERO);
+			itemRepository.save(item);
+			return oldBidId;
+		}
+
+		validateBidRequest(request, item);
+		validateAuctionRequest(item.getAuction(), request);
+
+		// ToDo: set to most recent amount, bug where the new amount is still an invalid
+		// amount of the prev rejected amount
+		setHighestBidData(item, request.bidId(), request.amount());
+		itemRepository.save(item);
+
+		return oldBidId;
+	}
+
+	private static void validateAuctionRequest(Auction auction, UpdatedBidRequest request) {
+		if (request.bidderId().equals(auction.getOwnerId())) {
+			throw new IllegalStateException("Auction owner cannot place bid on their own auction");
+		}
+
+		if (!auction.getAuctionStatus().equals(AuctionStatus.LIVE)) {
+			throw new IllegalStateException("Cannot place bid, the auction is " + auction.getAuctionStatus());
+		}
+
+		var now = Instant.now();
+		if (now.isBefore(auction.getStartTime()) || now.isAfter(auction.getEndTime())) {
+			throw new IllegalStateException(
+					"Cannot place bid, the bid is placed out of the range of the auction timing");
+		}
+	}
+
+	private static void validateBidRequest(UpdatedBidRequest request, Item item) {
+		if (!isHighestBid(request, item)) {
+			throw new IllegalStateException("Bid amount must be higher than the current highest bid");
+		} else if (!isAboveMinimumPrice(request, item)) {
+			throw new IllegalStateException("Bid amount must be higher than the minimum price on the item");
+		} else if (!request.itemId().equals(item.getId())) {
+			throw new IllegalStateException("Bid request item does not match item");
+		}
+	}
+
+	private static boolean isHighestBid(UpdatedBidRequest request, Item item) {
+		if (item.getHighestBidId() == null || item.getHighestBidAmount() == null) {
+			return true;
+		}
+
+		return item.getHighestBidAmount().compareTo(request.amount()) < 0;
+	}
+
+	private static boolean isAboveMinimumPrice(UpdatedBidRequest request, Item item) {
+		if (item.getMinimumPrice() == null) {
+			return request.amount() != null;
+		}
+
+		return request.amount().compareTo(item.getMinimumPrice()) > -1;
+	}
+
+	private void setHighestBidData(Item item, UUID highestBidId, BigDecimal highestBidAmount) {
+		item.setHighestBidId(highestBidId);
+		item.setHighestBidAmount(highestBidAmount);
+	}
+}
