@@ -128,10 +128,9 @@ token-expiry:
 # ---------- bids + catalog ----------
 client-url: ${CLIENT_URL:https://biddr-frontend.onrender.com}
 
-# ---------- bids ----------
-flag:
-  runRecomputeHighestBidsAfterBidExpires: ${RUN_RECOMPUTE_HIGHEST_BIDS:true}
-
-# ---------- catalog ----------
+# ---------- feature flags ----------
 feature-flag:
+  # catalog
   run-close-auction-schedule-job: false
+  # bids
+  runRecomputeHighestBidsAfterBidExpires: ${RUN_RECOMPUTE_HIGHEST_BIDS:true}
