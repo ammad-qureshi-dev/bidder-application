@@ -8,13 +8,25 @@ import java.util.UUID;
 
 import com.bidder.application.models.entities.catalog.Auction;
 import com.bidder.application.models.enums.catalog.AuctionStatus;
+import com.bidder.application.utils.Constants;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface AuctionRepository extends JpaRepository<Auction, UUID> {
+
+	// single atomic UPDATE so concurrent views don't lose increments (same as
+	// ItemRepository.incrementViewCount). Clears the persistence context so the
+	// auction can be re-read with the new count.
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
+	@Query(value = "update " + Constants.Database.CATALOG_SCHEMA + ".auction "
+			+ "set auction_metadata = jsonb_set(coalesce(auction_metadata, cast('{}' as jsonb)), '{viewCount}', "
+			+ "to_jsonb(coalesce(cast(auction_metadata ->> 'viewCount' as bigint), 0) + 1)) "
+			+ "where id = :auctionId", nativeQuery = true)
+	void incrementViewCount(@Param("auctionId") UUID auctionId);
 
 	@Query("""
 			select A

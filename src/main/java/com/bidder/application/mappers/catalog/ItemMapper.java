@@ -22,7 +22,7 @@ public class ItemMapper {
 
 		return new ItemResponse(entity.getId(), entity.getTitle(), entity.getDescription(), entity.getMinimumPrice(),
 				entity.getPriceSoldAt(), entity.getHighestBidId(), entity.getHighestBidAmount(),
-				entity.isAcceptingBids());
+				entity.isAcceptingBids(), entity.getItemMetadata() != null ? entity.getItemMetadata().getViewCount() : 0);
 	}
 
 	public static ItemSummaryResponse entityToSummary(Item i) {

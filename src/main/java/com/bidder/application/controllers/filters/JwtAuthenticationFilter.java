@@ -17,7 +17,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -26,13 +25,11 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+// Runs on public (whitelisted) endpoints too, so they can tell who's logged in. A missing or
+// invalid cookie just leaves the request anonymous; SecurityConfig decides what needs login.
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtService jwtService;
-
-	private final List<String> whitelistEndpoints;
-
-	private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
 	public static final String TOKEN_COOKIE = "token";
 
@@ -83,10 +80,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
 		String path = request.getServletPath();
-
-		if (whitelistEndpoints.stream().anyMatch(pattern -> PATH_MATCHER.match(pattern, path))) {
-			return true;
-		}
 
 		return path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")
 				|| path.startsWith("/swagger-resources") || path.equals("/swagger-ui.html");

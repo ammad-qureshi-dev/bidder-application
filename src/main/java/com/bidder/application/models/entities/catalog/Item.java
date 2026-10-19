@@ -9,9 +9,12 @@ import java.util.UUID;
 
 import com.bidder.application.utils.Constants;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.validator.constraints.Length;
 
 @Getter
@@ -48,6 +51,11 @@ public class Item extends BaseEntity {
 
 	@Builder.Default
 	private boolean acceptingBids = true;
+
+	@Valid
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(name = "item_metadata", columnDefinition = "jsonb")
+	private ItemMetadata itemMetadata;
 
 	// For optimistic locking
 	@Version

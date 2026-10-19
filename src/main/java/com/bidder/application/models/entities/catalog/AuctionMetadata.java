@@ -1,16 +1,13 @@
 package com.bidder.application.models.entities.catalog;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
-@Data
-@Builder
+// no fields of its own, so @SuperBuilder/@NoArgsConstructor only (an @AllArgsConstructor would clash with the no-arg one)
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
-public class AuctionMetadata {
-    private long viewCount;
-    private long favoriteCount;
-    private long shareCount;
-}
+public class AuctionMetadata extends Metadata { }

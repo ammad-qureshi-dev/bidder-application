@@ -99,6 +99,7 @@ whitelist-endpoints:
   - /catalog/api/v1/auction/search
   - /catalog/api/v1/item/**
   - /catalog/api/v1/auction/*/items
+  - /catalog/api/v1/auction/*/details
   - /catalog/api/v1/auction/view/*
 
 # ---------- security + auth ----------

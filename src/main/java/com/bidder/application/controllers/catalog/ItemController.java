@@ -2,8 +2,10 @@
 bidder.app */
 package com.bidder.application.controllers.catalog;
 
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import com.bidder.application.models.entities.auth.AppUser;
 import com.bidder.application.services.catalog.ItemService;
 import com.bidder.application.controllers.dtos.request.catalog.AcceptingBidsRequest;
 import com.bidder.application.controllers.dtos.request.catalog.UpdatedBidRequest;
@@ -11,6 +13,7 @@ import com.bidder.application.controllers.dtos.response.catalog.ItemResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import com.bidder.application.controllers.message.ApiResponse;
 
@@ -21,9 +24,20 @@ public class ItemController {
 
 	private final ItemService itemService;
 
-	@GetMapping("/{itemId}")
-	public ResponseEntity<ApiResponse<ItemResponse>> getItem(@PathVariable UUID itemId) {
-		var item = itemService.getItem(itemId);
+	@GetMapping("/view/{itemId}")
+	public ResponseEntity<ApiResponse<ItemResponse>> getItem(@PathVariable UUID itemId,
+			@AuthenticationPrincipal AppUser appUser) {
+		// public endpoint: appUser is null when the viewer isn't logged in
+		var viewerId = appUser != null ? appUser.getId() : null;
+		var item = itemService.viewItem(itemId, viewerId);
+		return ResponseEntity.ok().body(ApiResponse.<ItemResponse>builder().data(item).build());
+	}
+
+	// same data as /view/{itemId} without counting a view: for lookups that aren't someone opening
+	// the item page (e.g. titles on My Bids, refreshing after a bid)
+	@GetMapping("/{itemId}/details")
+	public ResponseEntity<ApiResponse<ItemResponse>> getItemDetails(@PathVariable UUID itemId) {
+		var item = itemService.findItem(itemId).orElseThrow(() -> new NoSuchElementException("Item not found"));
 		return ResponseEntity.ok().body(ApiResponse.<ItemResponse>builder().data(item).build());
 	}
 
