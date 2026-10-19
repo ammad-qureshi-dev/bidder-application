@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1
+# check=skip=SecretsUsedInArgOrEnv
 
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /workspace
@@ -7,10 +8,13 @@ COPY gradlew settings.gradle build.gradle ./
 COPY gradle gradle
 COPY src src
 
-# GitHub Packages credentials (for notifications-model) are passed as build secrets so they never land in an image layer
+# GitHub Packages credentials (for notifications-model) are passed as build args (Render injects env vars this way).
+# They're scoped to this build stage only, so they never reach the final runtime image.
+ARG BIDDER_USERNAME
+ARG BIDDER_GITHUB_TOKEN
 RUN --mount=type=cache,target=/root/.gradle \
-    --mount=type=secret,id=BIDDER_USERNAME,env=BIDDER_USERNAME,required=true \
-    --mount=type=secret,id=BIDDER_GITHUB_TOKEN,env=BIDDER_GITHUB_TOKEN,required=true \
+    test -n "$BIDDER_USERNAME" && test -n "$BIDDER_GITHUB_TOKEN" \
+ || { echo "BIDDER_USERNAME and BIDDER_GITHUB_TOKEN build args are required" >&2; exit 1; }; \
     chmod +x gradlew \
  && ./gradlew bootJar --no-daemon -x test \
  && cp "$(ls build/libs/*.jar | grep -v plain)" app.jar
