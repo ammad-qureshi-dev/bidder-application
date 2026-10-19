@@ -4,7 +4,7 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /workspace
 
-COPY gradlew settings.gradle build.gradle ./
+COPY gradlew settings.gradle build.gradle lombok.config ./
 COPY gradle gradle
 COPY src src
 
