@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import com.bidder.application.models.entities.auth.AppUser;
 import com.bidder.application.services.catalog.AuctionService;
 import com.bidder.application.controllers.dtos.request.catalog.AuctionRequest;
 import com.bidder.application.controllers.dtos.response.catalog.AuctionResponse;
@@ -67,7 +68,18 @@ public class AuctionController {
 	}
 
 	@GetMapping("/view/{auctionId}")
-	public ResponseEntity<ApiResponse<AuctionResponse>> getAuction(@PathVariable UUID auctionId) {
+	public ResponseEntity<ApiResponse<AuctionResponse>> getAuction(@PathVariable UUID auctionId,
+			@AuthenticationPrincipal AppUser appUser) {
+		// public endpoint: appUser is null when the viewer isn't logged in
+		var viewerId = appUser != null ? appUser.getId() : null;
+		var response = auctionService.viewAuction(auctionId, viewerId);
+		return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<AuctionResponse>builder().data(response).build());
+	}
+
+	// same data as /view/{auctionId} without counting a view: for lookups that aren't someone opening
+	// the auction page (e.g. the item page header, the edit form, refreshing after a status change)
+	@GetMapping("/{auctionId}/details")
+	public ResponseEntity<ApiResponse<AuctionResponse>> getAuctionDetails(@PathVariable UUID auctionId) {
 		var response = auctionService.getAuctionResponse(auctionId);
 		return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<AuctionResponse>builder().data(response).build());
 	}

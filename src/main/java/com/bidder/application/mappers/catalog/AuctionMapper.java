@@ -20,7 +20,8 @@ public class AuctionMapper {
 		var itemsDto = entity.getItems().stream().map(ItemMapper::entityToResponse).toList();
 		return new AuctionResponse(entity.getId(), entity.getOwnerId(), entity.getTitle(), entity.getAuctionStatus(),
 				entity.getCategories(), itemsDto, entity.getStartTime(), entity.getEndTime(),
-				PickupLocationMapper.entityToResponse(entity.getPickupLocation()));
+				PickupLocationMapper.entityToResponse(entity.getPickupLocation()),
+				entity.getAuctionMetadata() != null ? entity.getAuctionMetadata().getViewCount() : 0);
 	}
 
 	public static AuctionSummaryResponse entityToSummary(Auction a) {

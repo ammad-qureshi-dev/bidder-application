@@ -19,6 +19,7 @@ import com.bidder.application.controllers.dtos.response.catalog.ItemResponse;
 import com.bidder.application.models.enums.catalog.AuctionStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,8 +28,20 @@ public class ItemService {
 	private final ItemRepository itemRepository;
 	private final AuctionRepository auctionRepository;
 
-	public ItemResponse getItem(UUID id) {
-		var item = getItemById(id);
+	/**
+	 * Returns the item and records a view, unless the viewer is the auction owner.
+	 * Anonymous viewers (viewerId == null) are counted.
+	 */
+	@Transactional
+	public ItemResponse viewItem(UUID itemId, UUID viewerId) {
+		var item = getItemById(itemId);
+
+		if (!item.getAuction().getOwnerId().equals(viewerId)) {
+			itemRepository.incrementViewCount(itemId);
+			// re-read so the response includes this view
+			item = getItemById(itemId);
+		}
+
 		return ItemMapper.entityToResponse(item);
 	}
 

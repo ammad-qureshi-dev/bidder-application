@@ -94,8 +94,25 @@ public class AuctionService {
 		return auctionRepository.findById(id).orElseThrow(() -> new IllegalStateException("Auction not found"));
 	}
 
+	/** Returns the auction without recording a view. */
 	public AuctionResponse getAuctionResponse(UUID auctionId) {
+		return AuctionMapper.entityToResponse(getAuctionById(auctionId));
+	}
+
+	/**
+	 * Returns the auction and records a view, unless the viewer is the auction
+	 * owner. Anonymous viewers (viewerId == null) are counted.
+	 */
+	@Transactional
+	public AuctionResponse viewAuction(UUID auctionId, UUID viewerId) {
 		var auction = getAuctionById(auctionId);
+
+		if (!auction.getOwnerId().equals(viewerId)) {
+			auctionRepository.incrementViewCount(auctionId);
+			// re-read so the response includes this view
+			auction = getAuctionById(auctionId);
+		}
+
 		return AuctionMapper.entityToResponse(auction);
 	}
 

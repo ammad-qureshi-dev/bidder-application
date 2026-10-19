@@ -10,5 +10,5 @@ import com.bidder.application.models.enums.catalog.AuctionStatus;
 
 public record AuctionResponse(UUID id, UUID ownerId, String title, AuctionStatus auctionStatus,
 		List<AuctionCategory> categories, List<ItemResponse> items, Instant startTime, Instant endTime,
-		PickupLocationResponse pickupLocation) {
+		PickupLocationResponse pickupLocation, long viewCount) {
 }

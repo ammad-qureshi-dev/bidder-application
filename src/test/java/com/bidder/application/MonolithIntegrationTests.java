@@ -18,6 +18,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.bidder.application.repositories.catalog.ItemRepository;
 import com.bidder.application.services.auth.JwtService;
 import com.jayway.jsonpath.JsonPath;
 import com.sun.net.httpserver.HttpServer;
@@ -52,6 +53,9 @@ class MonolithIntegrationTests {
 
 	@Autowired
 	private JwtService jwtService;
+
+	@Autowired
+	private ItemRepository itemRepository;
 
 	@MockitoBean
 	private KafkaTemplate<String, Object> kafkaTemplate;
@@ -160,7 +164,7 @@ class MonolithIntegrationTests {
 		String bidId = JsonPath.read(createBid.getResponse().getContentAsString(), "$.data");
 
 		// bidding-service -> catalog-service (in-process) set the item's highest bid
-		mockMvc.perform(get("/catalog/api/v1/item/" + itemId)).andExpect(status().isOk())
+		mockMvc.perform(get("/catalog/api/v1/item/view/" + itemId)).andExpect(status().isOk())
 				.andExpect(jsonPath("$.data.highestBidId").value(bidId))
 				.andExpect(jsonPath("$.data.highestBidAmount").value(25));
 
@@ -187,6 +191,82 @@ class MonolithIntegrationTests {
 				.andExpect(status().isOk()).andReturn();
 		String closedBidStatus = JsonPath.read(closedBids.getResponse().getContentAsString(), "$.data[0].status");
 		assertThat(closedBidStatus).isEqualTo("WINNER");
+	}
+
+	@Test
+	void itemViewsAreCountedExceptForTheOwner() throws Exception {
+		var ownerId = UUID.randomUUID();
+		var itemId = createAuctionWithItem(ownerId)[1];
+		var viewUrl = "/catalog/api/v1/item/view/" + itemId;
+
+		// the response count includes the current view
+		mockMvc.perform(get(viewUrl)).andExpect(jsonPath("$.data.viewCount").value(1)); // anonymous
+		mockMvc.perform(get(viewUrl).cookie(tokenFor(UUID.randomUUID())))
+				.andExpect(jsonPath("$.data.viewCount").value(2)); // other user
+		mockMvc.perform(get(viewUrl).cookie(new Cookie("token", "not-a-jwt")))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.data.viewCount").value(3)); // bad cookie = anonymous
+		mockMvc.perform(get(viewUrl).cookie(tokenFor(ownerId))).andExpect(jsonPath("$.data.viewCount").value(3)); // owner
+		mockMvc.perform(get(viewUrl).cookie(tokenFor(ownerId))).andExpect(jsonPath("$.data.viewCount").value(3)); // owner
+
+		var item = itemRepository.findById(UUID.fromString(itemId)).orElseThrow();
+		assertThat(item.getItemMetadata().getViewCount()).isEqualTo(3);
+		assertThat(item.getVersion()).isZero(); // view counting must not bump the optimistic lock version
+	}
+
+	@Test
+	void auctionViewsAreCountedExceptForTheOwner() throws Exception {
+		var ownerId = UUID.randomUUID();
+		var ids = createAuctionWithItem(ownerId); // its anonymous GET of the auction is view #1
+		var viewUrl = "/catalog/api/v1/auction/view/" + ids[0];
+
+		mockMvc.perform(get(viewUrl).cookie(tokenFor(ownerId))).andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.viewCount").value(1)); // owner, not counted
+		mockMvc.perform(get(viewUrl).cookie(tokenFor(UUID.randomUUID())))
+				.andExpect(jsonPath("$.data.viewCount").value(2)); // other user
+		mockMvc.perform(get(viewUrl)).andExpect(jsonPath("$.data.viewCount").value(3)) // anonymous
+				// viewing the auction doesn't count as viewing its items
+				.andExpect(jsonPath("$.data.items[0].viewCount").value(0));
+	}
+
+	@Test
+	void detailsEndpointsArePublicAndDontCountViews() throws Exception {
+		var ids = createAuctionWithItem(UUID.randomUUID()); // its anonymous GET of the auction is view #1
+		var auctionDetails = "/catalog/api/v1/auction/" + ids[0] + "/details";
+		var itemDetails = "/catalog/api/v1/item/" + ids[1] + "/details";
+
+		for (int i = 0; i < 2; i++) {
+			mockMvc.perform(get(auctionDetails)).andExpect(status().isOk())
+					.andExpect(jsonPath("$.data.id").value(ids[0])).andExpect(jsonPath("$.data.viewCount").value(1));
+			mockMvc.perform(get(itemDetails).cookie(tokenFor(UUID.randomUUID()))).andExpect(status().isOk())
+					.andExpect(jsonPath("$.data.id").value(ids[1])).andExpect(jsonPath("$.data.viewCount").value(0));
+		}
+
+		mockMvc.perform(get("/catalog/api/v1/item/" + UUID.randomUUID() + "/details"))
+				.andExpect(status().isNotFound());
+	}
+
+	/** @return {auctionId, itemId} */
+	private String[] createAuctionWithItem(UUID ownerId) throws Exception {
+		var start = Instant.now().truncatedTo(ChronoUnit.HOURS);
+		var auctionJson = """
+				{
+				  "title": "View count auction",
+				  "startTime": "%s",
+				  "endTime": "%s",
+				  "biddingItems": [{"title": "Chair", "minimumPrice": 5}],
+				  "pickupLocation": {"unit": 1, "street": "1 Main St", "city": "Toronto", "postalCode": "M1M1M1",
+				                     "state": "ON", "country": "CA"}
+				}
+				""".formatted(start, start.plus(1, ChronoUnit.DAYS));
+
+		var created = mockMvc.perform(post("/catalog/api/v1/auction").cookie(tokenFor(ownerId))
+				.contentType(MediaType.APPLICATION_JSON).content(auctionJson)).andExpect(status().isCreated()).andReturn();
+		String auctionId = JsonPath.read(created.getResponse().getContentAsString(), "$.data");
+
+		var auction = mockMvc.perform(get("/catalog/api/v1/auction/view/" + auctionId)).andExpect(status().isOk())
+				.andReturn();
+		String itemId = JsonPath.read(auction.getResponse().getContentAsString(), "$.data.items[0].id");
+		return new String[]{auctionId, itemId};
 	}
 
 	private static HttpServer startNotificationStub() {
