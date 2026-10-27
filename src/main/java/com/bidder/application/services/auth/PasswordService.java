@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PasswordService {
 
-  @Value("${client.url}")
+  @Value("${client-url}")
   private String clientUrl;
 
   @Value("${auth.registration-pwd.allow-simple}")

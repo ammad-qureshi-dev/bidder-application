@@ -23,14 +23,12 @@ spring:
       minimum-idle: ${DB_POOL_MIN_IDLE:2}
       connection-timeout: 10000
       max-lifetime: 1800000
-      # This clears any cached prepared statements before reusing the connection.
-      connection-init-sql: "DISCARD ALL"
   jpa:
     # matches local (Boot default): entities like Auction.items are lazy-loaded after the service returns
     open-in-view: true
     show-sql: false
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:update}
+      ddl-auto: ${JPA_DDL_AUTO:validate}
       naming:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
@@ -112,10 +110,6 @@ cookies:
   sameSite: ${COOKIES_SAME_SITE:None}
   httpOnly: ${COOKIES_HTTP_ONLY:true}
 
-client:
-  # CORS allowed origins (gateway) and base URL for links in auth emails (identity)
-  url: ${CLIENT_URL:https://biddr-frontend.onrender.com}
-
 # ---------- auth ----------
 auth:
   registration-pwd:
@@ -131,7 +125,7 @@ client-url: ${CLIENT_URL:https://biddr-frontend.onrender.com}
 # ---------- feature flags ----------
 feature-flag:
   # catalog
-  run-close-auction-schedule-job: false
+  run-close-auction-schedule-job: true
   # bids
   run-recompute-highest-bids-after-bid-expires: ${RUN_RECOMPUTE_HIGHEST_BIDS:true}
 

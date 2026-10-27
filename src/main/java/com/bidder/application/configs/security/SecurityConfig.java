@@ -32,7 +32,7 @@ public class SecurityConfig {
   private final List<String> whitelistEndpoints;
 
   // comma-separated, e.g. "https://biddr-frontend.onrender.com,http://localhost:3000"
-  @Value("${client.url}")
+  @Value("${client-url}")
   private String clientUrls;
 
   // under /identity-and-auth/api/v1/auth/** (public) but they act on the logged-in user

@@ -43,7 +43,7 @@ public class AuthService {
   private final KafkaTemplate<String, Object> kafkaTemplate;
   private final AccessTokenRepository accessTokenRepository;
 
-  @Value("${client.url}")
+  @Value("${client-url}")
   private String clientUrl;
 
   @Value("${token-expiry.account-verification}")
