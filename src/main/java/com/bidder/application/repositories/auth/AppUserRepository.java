@@ -1,44 +1,51 @@
-/* (C) 2026 
+/* (C) 2026
 bidder.app */
 package com.bidder.application.repositories.auth;
 
+import com.bidder.application.models.entities.auth.AppUser;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.bidder.application.models.entities.auth.AppUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface AppUserRepository extends JpaRepository<AppUser, UUID> {
 
-	@Query("""
+  @Query(
+      """
 			    SELECT COUNT(u) > 0
 			    FROM AppUser u
 			    WHERE LOWER(u.email) = LOWER(:email)
 			""")
-	boolean emailExists(@Param("email") String email);
+  boolean emailExists(@Param("email") String email);
 
-	Optional<AppUser> findByEmail(String email);
-	Optional<AppUser> findByPhoneNumber(String phoneNumber);
+  Optional<AppUser> findByEmail(String email);
 
-	@Query(value = """
+  Optional<AppUser> findByPhoneNumber(String phoneNumber);
+
+  @Query(
+      value =
+          """
 			select *
 			from identity_and_auth_service.app_user a
 			where (a.verification_data->>'isVerified')::boolean = false
 			  and a.verification_data->>'status' = :status
 			  and (a.verification_data->>'lastRemindedOn')::timestamptz < now() - (:day * interval '1 day')
 			  and (a.verification_data->>'expirationDate')::timestamptz > now()
-			""", nativeQuery = true)
-	List<AppUser> findUsersDueForReminder(@Param("status") String status, @Param("day") long day);
+			""",
+      nativeQuery = true)
+  List<AppUser> findUsersDueForReminder(@Param("status") String status, @Param("day") long day);
 
-	@Query(value = """
+  @Query(
+      value =
+          """
 			select *
 			from identity_and_auth_service.app_user a
 			where (a.verification_data->>'isVerified')::boolean = false
 			  and a.verification_data->>'status' = 'FINAL_REMINDER'
 			  and (a.verification_data->>'expirationDate')::timestamptz <= now()
-			""", nativeQuery = true)
-	List<AppUser> findUsersPastExpiryDate();
+			""",
+      nativeQuery = true)
+  List<AppUser> findUsersPastExpiryDate();
 }

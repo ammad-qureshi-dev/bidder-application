@@ -1,4 +1,4 @@
-/* (C) 2026 
+/* (C) 2026
 bidder.app */
 package com.bidder.application.controllers.message;
 
@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ApiMessage {
-	private ResponseType type;
-	private String content;
+  private ResponseType type;
+  private String content;
 }

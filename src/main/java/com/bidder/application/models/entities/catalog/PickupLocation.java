@@ -1,4 +1,4 @@
-/* (C) 2026 
+/* (C) 2026
 bidder.app */
 package com.bidder.application.models.entities.catalog;
 
@@ -16,23 +16,19 @@ import org.hibernate.validator.constraints.Length;
 @Builder
 public class PickupLocation {
 
-	@NotNull private Long unit;
+  @NotNull private Long unit;
 
-	@NotBlank
-	private String street;
+  @NotBlank private String street;
 
-	@NotBlank
-	private String city;
+  @NotBlank private String city;
 
-	@NotBlank
-	private String postalCode;
+  @NotBlank private String postalCode;
 
-	@NotBlank
-	private String state;
+  @NotBlank private String state;
 
-	@NotBlank
-	private String country;
+  @NotBlank private String country;
 
-	// optional free-text pickup instructions
-	@Length(max = 512) private String instructions;
+  // optional free-text pickup instructions
+  @Length(max = 512)
+  private String instructions;
 }

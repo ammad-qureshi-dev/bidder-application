@@ -1,14 +1,13 @@
-/* (C) 2026 
+/* (C) 2026
 bidder.app */
 package com.bidder.application.scheduler.bids;
 
-import java.time.Instant;
-
+import com.bidder.application.configs.FeatureFlags;
 import com.bidder.application.repositories.bids.BidRepository;
 import com.bidder.application.services.bids.BidService;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,32 +17,30 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BidScheduler {
 
-	private final BidService bidService;
-	private final BidRepository bidRepository;
+  private final BidService bidService;
+  private final BidRepository bidRepository;
+  private final FeatureFlags featureFlags;
 
-	@Value("${feature-flag.runRecomputeHighestBidsAfterBidExpires}")
-	private boolean runRecomputeHighestBidsAfterBidExpires;
+  @Transactional
+  @Scheduled(fixedRate = 60000)
+  public void recomputeHighestBidsAfterBidExpires() {
 
-	@Transactional
-	@Scheduled(fixedRate = 60000)
-	public void recomputeHighestBidsAfterBidExpires() {
+    if (!featureFlags.runRecomputeHighestBidsAfterBidExpires()) {
+      log.info("RecomputeHighestBidsAfterBidExpires flag off");
+      return;
+    }
 
-		if (!runRecomputeHighestBidsAfterBidExpires) {
-			log.info("RecomputeHighestBidsAfterBidExpires flag off");
-			return;
-		}
+    log.info("BidScheduler: starting recomputeHighestBidsAfterBidExpires job...");
 
-		log.info("BidScheduler: starting recomputeHighestBidsAfterBidExpires job...");
+    var expiredBids = bidRepository.findItemIdsWithExpiredBids();
 
-		var expiredBids = bidRepository.findItemIdsWithExpiredBids();
+    if (expiredBids.isEmpty()) {
+      log.info("No items found with expired bids @ {}", Instant.now());
+      return;
+    }
 
-		if (expiredBids.isEmpty()) {
-			log.info("No items found with expired bids @ {}", Instant.now());
-			return;
-		}
+    expiredBids.forEach(bidService::processExpiredBid);
 
-		expiredBids.forEach(bidService::processExpiredBid);
-
-		log.info("BidScheduler: recomputeHighestBidsAfterBidExpires job completed");
-	}
+    log.info("BidScheduler: recomputeHighestBidsAfterBidExpires job completed");
+  }
 }

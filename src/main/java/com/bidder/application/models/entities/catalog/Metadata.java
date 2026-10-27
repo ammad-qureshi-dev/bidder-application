@@ -10,7 +10,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Metadata {
-    private long viewCount;
-    private long shareCount;
-    private long favoriteCount;
+  private long viewCount;
+  private long shareCount;
+  private long favoriteCount;
 }

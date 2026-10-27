@@ -1,19 +1,17 @@
-/* (C) 2026 
+/* (C) 2026
 bidder.app */
 package com.bidder.application.models.entities.catalog;
 
 import com.bidder.application.models.entities.BaseEntity;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
-import com.bidder.application.utils.Constants;
 import com.bidder.application.models.enums.catalog.AuctionCategory;
 import com.bidder.application.models.enums.catalog.AuctionStatus;
+import com.bidder.application.utils.Constants;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -29,44 +27,45 @@ import org.hibernate.type.SqlTypes;
 @ToString(exclude = {"items"})
 public class Auction extends BaseEntity {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-	@NotNull private String title;
+  @NotNull private String title;
 
-	@NotNull @Column(name = "owner_id")
-	private UUID ownerId;
+  @NotNull
+  @Column(name = "owner_id")
+  private UUID ownerId;
 
-	@OneToMany(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Item> items;
+  @OneToMany(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Item> items;
 
-	// 15min intervals, 00, 15, 30, 45
-	@NotNull private Instant startTime;
+  // 15min intervals, 00, 15, 30, 45
+  @NotNull private Instant startTime;
 
-	// 15min intervals, 00, 15, 30, 45
-	@NotNull private Instant endTime;
+  // 15min intervals, 00, 15, 30, 45
+  @NotNull private Instant endTime;
 
-	@Enumerated(EnumType.STRING)
-	private AuctionStatus auctionStatus;
+  @Enumerated(EnumType.STRING)
+  private AuctionStatus auctionStatus;
 
-	// stored as a native text[] so category filters can use a GIN index (@> / &&)
-	@Enumerated(EnumType.STRING)
-	@JdbcTypeCode(SqlTypes.ARRAY)
-	@Column(name = "categories", columnDefinition = "text[]")
-	private List<AuctionCategory> categories;
+  // stored as a native text[] so category filters can use a GIN index (@> / &&)
+  @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.ARRAY)
+  @Column(name = "categories", columnDefinition = "text[]")
+  private List<AuctionCategory> categories;
 
-	private Instant auctionClosedOn;
+  private Instant auctionClosedOn;
 
-	// nullable at the DB level so existing auctions don't break schema updates;
-	// presence is enforced in AuctionService on create/update
-	@Valid
-	@JdbcTypeCode(SqlTypes.JSON)
-	@Column(name = "pickup_location", columnDefinition = "jsonb")
-	private PickupLocation pickupLocation;
+  // nullable at the DB level so existing auctions don't break schema updates;
+  // presence is enforced in AuctionService on create/update
+  @Valid
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "pickup_location", columnDefinition = "jsonb")
+  private PickupLocation pickupLocation;
 
-	@Valid
-	@JdbcTypeCode(SqlTypes.JSON)
-	@Column(name = "auction_metadata", columnDefinition = "jsonb")
-	private AuctionMetadata auctionMetadata;
+  @Valid
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "auction_metadata", columnDefinition = "jsonb")
+  private AuctionMetadata auctionMetadata;
 }

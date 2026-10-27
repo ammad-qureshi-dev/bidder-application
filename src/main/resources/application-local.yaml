@@ -87,4 +87,5 @@ client-url: http://localhost:3000
 # ---------- feature flags ----------
 feature-flag:
   run-close-auction-schedule-job: false
-  runRecomputeHighestBidsAfterBidExpires: true
+  run-recompute-highest-bids-after-bid-expires: true
+  send-notifications: false

@@ -1,14 +1,12 @@
 package com.bidder.application.models.entities;
 
-
 import jakarta.persistence.MappedSuperclass;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.Instant;
 
 @Data
 @AllArgsConstructor
@@ -16,9 +14,7 @@ import java.time.Instant;
 @MappedSuperclass
 public class BaseEntity {
 
-	@CreationTimestamp
-	private Instant createdAt;
+  @CreationTimestamp private Instant createdAt;
 
-	@UpdateTimestamp
-	private Instant updatedAt;
+  @UpdateTimestamp private Instant updatedAt;
 }

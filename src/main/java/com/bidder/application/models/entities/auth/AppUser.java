@@ -3,16 +3,14 @@ bidder.app */
 package com.bidder.application.models.entities.auth;
 
 import com.bidder.application.models.entities.BaseEntity;
-import models.ContactType;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import lombok.*;
+import models.ContactType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.security.core.GrantedAuthority;
@@ -29,66 +27,67 @@ import org.springframework.security.core.userdetails.UserDetails;
 @EqualsAndHashCode(callSuper = true)
 public class AppUser extends BaseEntity implements UserDetails {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-	@NotNull private String fullName;
+  @NotNull private String fullName;
 
-	@NotNull private String password;
+  @NotNull private String password;
 
-	private String email;
+  private String email;
 
-	// ToDo: to be broken down
-	private String phoneNumber;
+  // ToDo: to be broken down
+  private String phoneNumber;
 
-	@JdbcTypeCode(SqlTypes.JSON)
-	@Column(name = "verification_data")
-	private AccountVerification verificationData;
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "verification_data")
+  private AccountVerification verificationData;
 
-	@Nullable @Enumerated(EnumType.STRING)
-	private ContactType preferredContactMethod;
+  @Nullable
+  @Enumerated(EnumType.STRING)
+  private ContactType preferredContactMethod;
 
-	public AppUser(UUID id, String email, String phoneNumber, String password) {
-		this.id = id;
-		this.email = email;
-		this.phoneNumber = phoneNumber;
-		this.password = password;
-	}
+  public AppUser(UUID id, String email, String phoneNumber, String password) {
+    this.id = id;
+    this.email = email;
+    this.phoneNumber = phoneNumber;
+    this.password = password;
+  }
 
-	public AppUser(UUID id, UserDetails userDetails) {
-		this.id = id;
-		this.email = userDetails.getUsername();
-		this.password = userDetails.getPassword();
-	}
+  public AppUser(UUID id, UserDetails userDetails) {
+    this.id = id;
+    this.email = userDetails.getUsername();
+    this.password = userDetails.getPassword();
+  }
 
-	public String getFirstName() {
-		var spaceIndex = this.fullName.indexOf(' ');
+  public String getFirstName() {
+    var spaceIndex = this.fullName.indexOf(' ');
 
-		if (spaceIndex > 0) {
-			return this.fullName.substring(0, spaceIndex);
-		}
+    if (spaceIndex > 0) {
+      return this.fullName.substring(0, spaceIndex);
+    }
 
-		return "";
-	}
+    return "";
+  }
 
-	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return List.of(new SimpleGrantedAuthority("ROLE_USER"));
-	}
+  @Override
+  public Collection<? extends GrantedAuthority> getAuthorities() {
+    return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+  }
 
-	@Override
-	public String getUsername() {
-		return email != null ? email : phoneNumber;
-	}
+  @Override
+  public String getUsername() {
+    return email != null ? email : phoneNumber;
+  }
 
-	@Override
-	public boolean isEnabled() {
-		var data = getVerificationData();
-		if (data == null) {
-			return false;
-		}
+  @Override
+  public boolean isEnabled() {
+    var data = getVerificationData();
+    if (data == null) {
+      return false;
+    }
 
-		return data.isVerified();
-	}
+    return data.isVerified();
+  }
 }

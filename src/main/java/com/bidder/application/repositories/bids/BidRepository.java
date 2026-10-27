@@ -1,27 +1,28 @@
-/* (C) 2026 
+/* (C) 2026
 bidder.app */
 package com.bidder.application.repositories.bids;
 
+import com.bidder.application.models.entities.bids.Bid;
+import com.bidder.application.models.enums.bids.BidStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.bidder.application.models.entities.bids.Bid;
-import com.bidder.application.models.enums.bids.BidStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface BidRepository extends JpaRepository<Bid, UUID> {
 
-	@Query("""
+  @Query(
+      """
 			select b
 			from Bid b
 			where b.expiresAt <= CURRENT_TIMESTAMP
 			""")
-	List<Bid> findItemIdsWithExpiredBids();
+  List<Bid> findItemIdsWithExpiredBids();
 
-	@Query("""
+  @Query(
+      """
 			select b
 			from Bid b
 			where b.itemId = :itemId
@@ -29,21 +30,23 @@ public interface BidRepository extends JpaRepository<Bid, UUID> {
 			and b.status in (com.bidder.application.models.enums.bids.BidStatus.ACTIVE, com.bidder.application.models.enums.bids.BidStatus.OUTBID)
 			order by b.amount desc
 			""")
-	List<Bid> findMaxValidBidByStatus(@Param("itemId") UUID itemId);
+  List<Bid> findMaxValidBidByStatus(@Param("itemId") UUID itemId);
 
-	@Query("""
+  @Query(
+      """
 			select b
 			from Bid b
 			where b.bidderId = :bidderId
 			order by b.placedAt
 			""")
-	List<Bid> findBidsByBidderId(@Param("bidderId") UUID bidderId);
+  List<Bid> findBidsByBidderId(@Param("bidderId") UUID bidderId);
 
-	Optional<Bid> findByItemIdAndStatus(UUID itemId, BidStatus status);
+  Optional<Bid> findByItemIdAndStatus(UUID itemId, BidStatus status);
 
-	List<Bid> findByItemId(UUID itemId);
+  List<Bid> findByItemId(UUID itemId);
 
-	@Query("""
+  @Query(
+      """
 			select b
 			from Bid b
 			where b.itemId = :itemId
@@ -60,7 +63,7 @@ public interface BidRepository extends JpaRepository<Bid, UUID> {
 				b.amount desc
 			limit 10
 			""")
-	List<Bid> findTopTenBids(@Param("itemId") UUID itemId);
+  List<Bid> findTopTenBids(@Param("itemId") UUID itemId);
 
-	boolean existsByItemIdAndStatus(UUID itemId, BidStatus status);
+  boolean existsByItemIdAndStatus(UUID itemId, BidStatus status);
 }

@@ -12,7 +12,7 @@ jwt:
   secret: dGVzdC1vbmx5LWp3dC1zZWNyZXQta2V5LWZvci10aGUtbW9ub2xpdGgtYnVpbGQtMDEyMzQ1Njc4OQ==
 
 flag:
-  runRecomputeHighestBidsAfterBidExpires: false
+  run-recompute-highest-bids-after-bid-expires: false
 
 # same actuator path as the prod profile (the one Render/Docker health checks use)
 management:

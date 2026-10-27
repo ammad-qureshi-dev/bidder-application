@@ -133,4 +133,7 @@ feature-flag:
   # catalog
   run-close-auction-schedule-job: false
   # bids
-  runRecomputeHighestBidsAfterBidExpires: ${RUN_RECOMPUTE_HIGHEST_BIDS:true}
+  run-recompute-highest-bids-after-bid-expires: ${RUN_RECOMPUTE_HIGHEST_BIDS:true}
+
+  # temporarily turn off until an email client is ready. Notifications will be paused as well until a client is ready
+  send-notifications: false

@@ -1,7 +1,8 @@
-/* (C) 2026 
+/* (C) 2026
 bidder.app */
 package com.bidder.application.models.enums.auth;
 
 public enum TokenType {
-	PASSWORD_RESET, VERIFICATION
+  PASSWORD_RESET,
+  VERIFICATION
 }
